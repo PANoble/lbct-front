@@ -1,11 +1,24 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import './index.css';
-import App from './App';
-import store from './app/store';
+import createSagaMiddleware from 'redux-saga';
+import { createStore, applyMiddleware } from 'redux';
 import { Provider } from 'react-redux';
-import * as serviceWorker from './serviceWorker';
 
+import './index.css';
+import App from './components/App';
+import * as serviceWorker from './serviceWorker';
+import reducers from './reducers';
+import handleNewMessage from './sagas/index';
+import setupSocket from './sockets';
+import username from './utils/name';
+import usercolor from './utils/color';
+import avatar from './utils/avatar';
+const sagaMiddleware = createSagaMiddleware();
+
+const store = createStore(reducers, applyMiddleware(sagaMiddleware));
+const socket = setupSocket(store.dispatch, username, usercolor, avatar);
+
+sagaMiddleware.run(handleNewMessage, { socket, username, usercolor, avatar });
 ReactDOM.render(
   <React.StrictMode>
     <Provider store={store}>
@@ -15,7 +28,4 @@ ReactDOM.render(
   document.getElementById('root')
 );
 
-// If you want your app to work offline and load faster, you can change
-// unregister() to register() below. Note this comes with some pitfalls.
-// Learn more about service workers: https://bit.ly/CRA-PWA
-serviceWorker.unregister();
+serviceWorker.register();
